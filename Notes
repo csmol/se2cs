@@ -1,0 +1,21 @@
+The structure of the folder
+
+stabilizer_timelime/
+|_ src/
+    |_ dataslurper/
+    |   |_ __init__.py
+    |   |_ slurpdata.py
+    |_ stabilizer/
+    |   |_ __init__.py
+    |   |_ src/
+    |   |   |_ __init__.py
+    |   |   |_ 
+    |   |   |_
+    |   |_ utils/
+    |   |    |_ __init__.py
+    |   |_ _ |_ 
+    |_ timelime/
+    |   |_ __init__.py
+    |   |_src/
+    |   |    |_ __init__.py
+s

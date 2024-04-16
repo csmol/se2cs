@@ -1,0 +1,17 @@
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "stabilizer_timelime"
+version = "0.1.4"
+authors = ["Sukhad Joshi <sjoshi32@ncsu.edu>"]
+description = "Packaged project that contains code to scrape GitHub data, build and run stabilizer and timeline"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+readme = "README.md"
+dependencies = {python = "^3.7", python-dateutil = "^2.9.0", pillow = "^10.2.0", numpy = "^1.26.4", pandas = "^1.3.5", PyGithub = "^2.2.0", tqdm = "^4.66.2", freediscovery-stabilizer = "1.5.dev0", "matplotlib" = "^3.8.4", scikit-learn = "^1.4.2", scipy = "^1.13.0"}
