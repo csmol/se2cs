@@ -12,6 +12,10 @@ import pandas as pd
 
 from tqdm import tqdm
 
+from .prudenceChecker import PrudenceChecker
+
+DEFAULT_PRUDENCE_CHECKER = PrudenceChecker()
+
 def inc_value_in_dict(result: dict, date: str, column: str) -> None:
     """
         Helper function that increments the indicator value for given date.
@@ -118,24 +122,31 @@ def get_stargazers(repo: github.Repository.Repository, result: dict, contributor
         inc_value_in_dict(result, starred_at.strftime('%Y-%m-%d'), "monthly_stargazer")
 
 
-def create_dataset(repo_list_csv: str, access_tokens: list, dest_folder: str) -> None:
+def create_dataset(repo_list_csv: str, access_tokens_dict: dict, dest_folder: str, prudence_checker: PrudenceChecker=DEFAULT_PRUDENCE_CHECKER) -> None:
     """
         Creates the dataset and stores in csv files in dest_folder. 
         Parameters:
             repo_list_csv: Path of the csv file that contains organization and repo name info
-            access_tokens: List of github access tokens
+            access_tokens_dict: dict of github access tokens with key as username as value as the token
             dest_folder: Path of the destination folder
     """
     token_ind = 0
 
+    access_tokens = list(access_tokens_dict.values())
+    access_usernames = list(access_tokens_dict.keys())
+
     repo_list = pd.read_csv(repo_list_csv)
 
-    print("Number of projects to slurp:", repo_list.shape[0])
+    print("Number of projects to process:", repo_list.shape[0])
 
     Path(dest_folder).mkdir(parents=True, exist_ok=True)
 
     if ("organization" not in repo_list.columns) or ("repo" not in repo_list.columns):
         raise Exception("CSV missing column organization or/and repo")
+    
+
+    if ("url" not in repo_list.columns):
+        raise Exception("CSV missing column url")
 
     funcs = [get_commits, get_prs, get_issues, get_stargazers]
 
@@ -143,6 +154,12 @@ def create_dataset(repo_list_csv: str, access_tokens: list, dest_folder: str) ->
 
         org_name = row["organization"]
         repo_name = row["repo"]
+
+        repo_url = row["url"]
+
+        if not prudence_checker.is_passing_prudence(url=repo_url, token=access_tokens[token_ind%len(access_tokens)], username=access_usernames[token_ind%len(access_tokens)]):
+            print("Failed prudence check: {0}/{1}".format(org_name, repo_name))
+            continue
 
         if os.path.isfile(os.path.join(dest_folder, org_name+"_"+repo_name+".csv")):
             continue
