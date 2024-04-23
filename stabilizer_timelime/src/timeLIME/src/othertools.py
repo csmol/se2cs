@@ -33,23 +33,31 @@ def list2dataframe(lst):
     return pd.DataFrame(lst)
 
 
-def prepareData(fname):
-    file = os.path.join("data", fname)
+def prepareData(fname, target):
+    file = os.path.join("se2cs/stabilizer_timelime/src/timeLIME/data/", fname)
     df = pd.read_csv(file,sep=',')
     cols=list(df.columns)
-    cols = ['dates', 'monthly_stargazer', 'monthly_commits', 'monthly_closed_issues', 'monthly_closed_PRs', 'monthly_contributors', 'monthly_open_issues', 'monthly_open_PRs']
-
-
+    cols.remove(target)
+    cols.append(target)
     df = pd.DataFrame(df[cols])
     return df
 
-def bugs(fname):
-    file = os.path.join("data", fname)
+def bugs(fname, target):
+    file = os.path.join("se2cs/stabilizer_timelime/src/timeLIME/data/", fname)
     df = pd.read_csv(file,sep=',')
-    return df.iloc[:,3]
+    target_column = df[target]
+    return target_column
 
-def get_index(name):
-    feature = ['monthly_stargazer', 'monthly_commits', 'monthly_closed_issues', 'monthly_closed_PRs', 'monthly_contributors', 'monthly_open_issues']
+def get_index(name, target):
+
+    files_in_data_folder = os.listdir("se2cs/stabilizer_timelime/src/timeLIME/data")
+    first_file = files_in_data_folder[0]  # Choosing the first file
+
+    file = os.path.join("se2cs/stabilizer_timelime/src/timeLIME/data", first_file)
+    df = pd.read_csv(file)
+
+    # Get all column names except 'dates' and the target column
+    feature = [col for col in df.columns if col != 'dates' and col != target]
     for i in range(len(feature)):
         if name ==feature[i]:
             return i
@@ -93,8 +101,53 @@ def translate1(sentence,name):
             right = 1
     return left, right
 
+def flip_inc(target, data_row,local_exp,ind,clf,cols,n_feature = 5,actionable = None):
+    counter = 0
+    rejected = 0
+    cache = []
+    trans = []
+    # Store feature index in cache.
+    cnt, cntp,cntn = [],[],[]
+    for i in range(0,len(local_exp)):
+        cache.append(ind[i])
+        trans.append(local_exp[i])
+        if ind[i][1]>0.01:
+            cntn.append(i)
+            cnt.append(i)
+        elif ind[i][1]<-0.01:
+            cntp.append(i)
+            cnt.append(i)
 
-def flip(data_row,local_exp,ind,clf,cols,n_feature = 5,actionable = None):
+    record =[0 for n in range(6)]
+    tem = data_row.copy()
+    result =  [[ 0 for m in range(2)] for n in range(6)]
+
+    for j in range(0,len(local_exp)):
+        act = True
+        index = get_index(cols[cache[j][0]], target)
+        if actionable:
+            if actionable[index]==0:
+                act=False
+        l,r = translate1(trans[j][0],cols[cache[j][0]])
+        if j in cnt and counter<n_feature and act:
+            if j in cntp:
+                result[cache[j][0]][0],result[cache[j][0]][1] = 0,tem[index]
+                record[index]=-1
+            else:
+                result[cache[j][0]][0],result[cache[j][0]][1] = tem[index],1
+                record[index]=1
+            counter+=1
+        else:
+            if act:
+                result[cache[j][0]][0],result[cache[j][0]][1] = tem[index]-0.005,tem[index]+0.005
+                # result[cache[j][0]][0],result[cache[j][0]][1] = tem[index],tem[index]
+            else:
+                result[cache[j][0]][0],result[cache[j][0]][1] = tem[index]-0.05,tem[index]+0.05
+                # result[cache[j][0]][0],result[cache[j][0]][1] = tem[index],tem[index]
+    return tem,result,record
+
+
+def flip_dec(target, data_row,local_exp,ind,clf,cols,n_feature = 5,actionable = None):
     counter = 0
     rejected = 0
     cache = []
@@ -117,7 +170,7 @@ def flip(data_row,local_exp,ind,clf,cols,n_feature = 5,actionable = None):
 
     for j in range(0,len(local_exp)):
         act = True
-        index = get_index(cols[cache[j][0]])
+        index = get_index(cols[cache[j][0]], target)
         if actionable:
             if actionable[index]==0:
                 act=False

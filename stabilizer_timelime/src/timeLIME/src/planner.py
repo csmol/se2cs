@@ -15,15 +15,15 @@ import csv
 
 warnings.filterwarnings("ignore")
 
-def TL(name,par,rules,smote=False,act=False):
+def TL(name,par,target, rules,smote=False,act=False):
 
     start_time = time.time()
     files = [name[0], name[1], name[2]]
     freq = [0] * 6
     deltas = []
     for j in range(0, len(files) - 2):
-        df1 = prepareData(files[j])
-        df2 = prepareData(files[j + 1])
+        df1 = prepareData(files[j],target)
+        df2 = prepareData(files[j + 1],target)
         for i in range(1, 7):
             col1 = df1.iloc[:, i]
             col2 = df2.iloc[:, i]
@@ -39,13 +39,13 @@ def TL(name,par,rules,smote=False,act=False):
             actionable.append(0)
     print("actionable")
     print(actionable)
-    df1 = prepareData(name[0])
-    df2 = prepareData(name[1])
-    df3 = prepareData(name[2])
+    df1 = prepareData(name[0],target)
+    df2 = prepareData(name[1],target)
+    df3 = prepareData(name[2],target)
 
-    bug1 = bugs(name[0])
-    bug2 = bugs(name[1])
-    bug3 = bugs(name[2])
+    bug1 = bugs(name[0],target)
+    bug2 = bugs(name[1],target)
+    bug3 = bugs(name[2],target)
 
     df11 = df1.iloc[:, 1:]
     df22 = df2.iloc[:, 1:]
@@ -107,9 +107,16 @@ def TL(name,par,rules,smote=False,act=False):
                 temp = X_test1.values[i].copy()
 
                 if act:
-                    tem, plan, rec = flip(temp, ins.as_list(), ind, clf1, df1n.columns, par, actionable=actionable)
+                    if target == "monthly_open_issues" or target == "monthly_open_PRs":
+                        tem, plan, rec = flip_dec(target, temp, ins.as_list(), ind, clf1, df1n.columns, par, actionable=actionable)
+                    else:
+                        tem, plan, rec = flip_inc(target, temp, ins.as_list(), ind, clf1, df1n.columns, par, actionable=actionable)
+
                 else:
-                    tem, plan, rec = flip(temp, ins.as_list(), ind, clf1, df1n.columns, par, actionable=None)
+                    if target == "monthly_open_issues" or target == "monthly_open_PRs":
+                        tem, plan, rec = flip_dec(target, temp, ins.as_list(), ind, clf1, df1n.columns, par, actionable=None)
+                    else:
+                        tem, plan, rec = flip_inc(target, temp, ins.as_list(), ind, clf1, df1n.columns, par, actionable=None)
 
 
                 for i in range(len(plan)):
@@ -137,8 +144,8 @@ def TL(name,par,rules,smote=False,act=False):
                 # print("==============================================================")
                 # print("plan:", plan)
                 # print("==============================================================")
-                # print("rec:", rec)
-                # print("==============================================================")
+                print("rec:", rec)
+                print("==============================================================")
                 # print("actual:", actual)
 
                 # Function to save data to CSV file
@@ -175,14 +182,14 @@ def TL(name,par,rules,smote=False,act=False):
     return score, bugchange, size, score2, records, matrix
 
 
-def historical_logs(name, par, explainer=None, smote=False, small=0.05, act=False):
+def historical_logs(name, par, target, explainer=None, smote=False, small=0.05, act=False):
     start_time = time.time()
     files = [name[0], name[1], name[2]]
     freq = [0] * 6
     deltas = []
     for j in range(0, len(files) - 2):
-        df1 = prepareData(files[j])
-        df2 = prepareData(files[j + 1])
+        df1 = prepareData(files[j],target)
+        df2 = prepareData(files[j + 1],target)
         for i in range(1, 7):
             col1 = df1.iloc[:, i]
             col2 = df2.iloc[:, i]
@@ -196,12 +203,12 @@ def historical_logs(name, par, explainer=None, smote=False, small=0.05, act=Fals
         else:
             actionable.append(0)
 
-    df1 = prepareData(name[0])
-    df2 = prepareData(name[1])
-    df3 = prepareData(name[2])
-    bug1 = bugs(name[0])
-    bug2 = bugs(name[1])
-    bug3 = bugs(name[2])
+    df1 = prepareData(name[0],target)
+    df2 = prepareData(name[1],target)
+    df3 = prepareData(name[2],target)
+    bug1 = bugs(name[0],target)
+    bug2 = bugs(name[1],target)
+    bug3 = bugs(name[2],target)
     df11 = df1.iloc[:, 1:]
     df22 = df2.iloc[:, 1:]
     df33 = df3.iloc[:, 1:]
@@ -247,9 +254,15 @@ def historical_logs(name, par, explainer=None, smote=False, small=0.05, act=Fals
                 ind = ins.local_exp[1]
                 temp = X_test1.values[i].copy()
                 if act:
-                    tem, plan, rec = flip(temp, ins.as_list(), ind, clf1, df1n.columns, 0, actionable=actionable)
+                    if target == "monthly_open_issues" or target == "monthly_open_PRs":
+                        tem, plan, rec = flip_dec(target, temp, ins.as_list(), ind, clf1, df1n.columns, 0, actionable=actionable)
+                    else:
+                        tem, plan, rec = flip_inc(target, temp, ins.as_list(), ind, clf1, df1n.columns, 0, actionable=actionable)
                 else:
-                    tem, plan, rec = flip(temp, ins.as_list(), ind, clf1, df1n.columns, 0, actionable=None)
+                    if target == "monthly_open_issues" or target == "monthly_open_PRs":
+                        tem, plan, rec = flip_dec(target, temp, ins.as_list(), ind, clf1, df1n.columns, 0, actionable=None)
+                    else:
+                        tem, plan, rec = flip_inc(target, temp, ins.as_list(), ind, clf1, df1n.columns, 0, actionable=None)
                 o = track1(plan[:-1], temp)
                 n = track1(plan[:-1], actual)
                 old_change.append(o)

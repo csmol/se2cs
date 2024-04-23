@@ -3,10 +3,10 @@ import numpy
 import pandas as pd
 
 # Input folder path containing CSV files
-input_folder = 'H:\RAISE\Spring 24\TimeLIME_for_CS\data_paul'
+input_folder = '' #path to slurped data folder
 
 # Output folder path to store split files
-output_folder = 'H:\RAISE\Spring 24\TimeLIME_for_CS\data'
+output_folder = 'se2cs\stabilizer_timelime\src\timeLIME\data'
 
 # Create the output folder if it doesn't exist
 os.makedirs(output_folder, exist_ok=True)
@@ -46,8 +46,3 @@ for filename in os.listdir(input_folder):
         split_1.to_csv(split_path_1, index=False)
         split_2.to_csv(split_path_2, index=False)
         split_3.to_csv(split_path_3, index=False)
-
-        print(f'Split files created for {filename}:')
-        print(f'- {split_filename_1} ({len(split_1)} rows)')
-        print(f'- {split_filename_2} ({len(split_2)} rows)')
-        print(f'- {split_filename_3} ({len(split_3)} rows)')
