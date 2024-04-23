@@ -39,6 +39,7 @@ def create_folders(config=DEFAULT_CONFIG):
         else:
             os.makedirs(subfolder_path, exist_ok=True)
 
+    Path("results/with_CFS_DE/Stats_new").mkdir(parents=True, exist_ok=True)
 
 
 def copy_source_2_data_use(config=DEFAULT_CONFIG):
