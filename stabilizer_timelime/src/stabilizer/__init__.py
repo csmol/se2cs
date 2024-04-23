@@ -6,5 +6,6 @@ from .src.Find_bellwethers import find_bellwether
 from .src.collect_bellwethers import collect_bellwether
 from .src.Performance_Calculator import performance_calculator
 from .src.Stats_files import generate_stats_files
+from .src.generate_results import generate_results
 
 from .config import Config
