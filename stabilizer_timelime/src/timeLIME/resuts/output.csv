@@ -1,0 +1,13 @@
+Month,monthly_closed_issues,monthly_open_PRs,monthly_closed_PRs,monthly_stargazer,monthly_contributors,monthly_commits
+Month_1,0,0,-1,1,-1,-1
+Month_2,0,0,-1,1,1,-1
+Month_3,0,0,-1,1,1,1
+Month_4,0,0,-1,1,-1,-1
+Month_5,0,0,-1,1,-1,-1
+Month_6,0,0,-1,-1,-1,-1
+Month_7,0,0,-1,1,-1,1
+Month_8,0,0,-1,1,1,1
+Month_9,0,0,-1,-1,1,-1
+Month_10,0,0,-1,1,-1,1
+Month_11,0,0,-1,1,-1,1
+Month_12,0,0,1,-1,1,-1

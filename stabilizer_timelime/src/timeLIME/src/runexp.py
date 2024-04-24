@@ -1,5 +1,7 @@
 from planner import *
 import warnings
+import pandas as pd
+import os
 
 warnings.filterwarnings("ignore")
 
@@ -9,7 +11,7 @@ def main():
     print("RUNNING FREQUENT ITEMSET LEARNING")
 
     # Path to your data folder
-    data_folder = './data'
+    data_folder = 'se2cs/stabilizer_timelime/src/timeLIME/data'
     # List to store the file names
     fnames = []
     # List all files in the data folder
@@ -20,10 +22,19 @@ def main():
     for split in split_files:
         fnames.append(split)
 
+    # Path to your CSV file
+    target_file = 'se2cs/stabilizer_timelime/src/timeLIME/target/target.csv'
+
+    # Read the CSV file
+    df = pd.read_csv(target_file)
+
+    # Extract the value of the 'Target' column
+    target = df['Target'].values[0]
+
     old, new = [], []
     for par in paras:
         for name in fnames:
-            o, n = historical_logs(name, 6, explainer, smote=True, small=.03, act=par)
+            o, n = historical_logs(name, 6, target, explainer, smote=True, small=.03, act=par)
             old.append(o)
             new.append(n)
     everything = []
@@ -49,7 +60,7 @@ def main():
             df = pd.DataFrame.sparse.from_spmatrix(te_ary, columns=te.columns_)
             rules = apriori(df, min_support=0.001, max_len=5, use_colnames=True)
 
-            score, bc, size, score_2, rec, mat = TL(name, 6, rules, smote=True, act=par)
+            score, bc, size, score_2, rec, mat = TL(name, 6, target, rules, smote=True, act=par)
             scores_t.append(score)
             bcs_t.append(bc)
             size_t.append(size)
