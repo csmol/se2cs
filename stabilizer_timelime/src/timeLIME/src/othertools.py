@@ -40,7 +40,7 @@ def prepareData(fname, target):
     cols.remove(target)
     cols.append(target)
     df = pd.DataFrame(df[cols])
-    return df
+    return df, cols
 
 def bugs(fname, target):
     file = os.path.join("se2cs/stabilizer_timelime/src/timeLIME/data/", fname)

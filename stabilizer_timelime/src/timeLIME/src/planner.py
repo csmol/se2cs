@@ -12,6 +12,7 @@ import random
 from sklearn.preprocessing import MinMaxScaler
 import warnings
 import csv
+from datetime import datetime
 
 warnings.filterwarnings("ignore")
 
@@ -22,8 +23,8 @@ def TL(name,par,target, rules,smote=False,act=False):
     freq = [0] * 6
     deltas = []
     for j in range(0, len(files) - 2):
-        df1 = prepareData(files[j],target)
-        df2 = prepareData(files[j + 1],target)
+        df1, cols = prepareData(files[j],target)
+        df2, cols = prepareData(files[j + 1],target)
         for i in range(1, 7):
             col1 = df1.iloc[:, i]
             col2 = df2.iloc[:, i]
@@ -39,9 +40,9 @@ def TL(name,par,target, rules,smote=False,act=False):
             actionable.append(0)
     print("actionable")
     print(actionable)
-    df1 = prepareData(name[0],target)
-    df2 = prepareData(name[1],target)
-    df3 = prepareData(name[2],target)
+    df1, cols = prepareData(name[0],target)
+    df2, cols = prepareData(name[1],target)
+    df3, cols = prepareData(name[2],target)
 
     bug1 = bugs(name[0],target)
     bug2 = bugs(name[1],target)
@@ -91,94 +92,61 @@ def TL(name,par,target, rules,smote=False,act=False):
                                                            discretizer='entropy', feature_selection='lasso_path',
                                                            mode='regression')
 
-    # file_path_1 = "plans.csv"
-    # with open(file_path_1, mode='a', newline='') as file:
-    #     writer = csv.writer(file)
-    #     writer.writerow(['name'] + [name[0]])
-    for i in range(0, len(y_test1)):
-        for j in range(0, len(y_test2)):
-            actual = X_test2.values[j]
-            if True:
-                ins = explainer.explain_instance(data_row=X_test1.values[i], predict_fn=clf1.predict,
-                                                    num_features=6,
-                                                    num_samples=5000)
-                ind = ins.local_exp[1]
+    file_path_1 = "se2cs/stabilizer_timelime/src/timeLIME/resuts/output.csv"
+    # Writing data to CSV
+    with open(file_path_1, mode='a', newline='') as file:
+        writer = csv.writer(file)
+        current_date = datetime.now().date()
+        writer.writerow(['Date'] + [current_date])
+        writer.writerow(['name'] + [name[0]])
+         # Feature names
+        feature_names = cols[1: 6]
+        # Write header row
+        writer.writerow(['Month'] + feature_names)
 
-                temp = X_test1.values[i].copy()
+        for i in range(0, len(y_test1)):
+            for j in range(0, len(y_test2)):
+                actual = X_test2.values[j]
+                if True:
+                    ins = explainer.explain_instance(data_row=X_test1.values[i], predict_fn=clf1.predict,
+                                                        num_features=6,
+                                                        num_samples=5000)
+                    ind = ins.local_exp[1]
 
-                if act:
-                    if target == "monthly_open_issues" or target == "monthly_open_PRs":
-                        tem, plan, rec = flip_dec(target, temp, ins.as_list(), ind, clf1, df1n.columns, par, actionable=actionable)
+                    temp = X_test1.values[i].copy()
+
+                    if act:
+                        if target == "monthly_open_issues" or target == "monthly_open_PRs":
+                            tem, plan, rec = flip_dec(target, temp, ins.as_list(), ind, clf1, df1n.columns, par, actionable=actionable)
+                        else:
+                            tem, plan, rec = flip_inc(target, temp, ins.as_list(), ind, clf1, df1n.columns, par, actionable=actionable)
+
                     else:
-                        tem, plan, rec = flip_inc(target, temp, ins.as_list(), ind, clf1, df1n.columns, par, actionable=actionable)
-
-                else:
-                    if target == "monthly_open_issues" or target == "monthly_open_PRs":
-                        tem, plan, rec = flip_dec(target, temp, ins.as_list(), ind, clf1, df1n.columns, par, actionable=None)
-                    else:
-                        tem, plan, rec = flip_inc(target, temp, ins.as_list(), ind, clf1, df1n.columns, par, actionable=None)
+                        if target == "monthly_open_issues" or target == "monthly_open_PRs":
+                            tem, plan, rec = flip_dec(target, temp, ins.as_list(), ind, clf1, df1n.columns, par, actionable=None)
+                        else:
+                            tem, plan, rec = flip_inc(target, temp, ins.as_list(), ind, clf1, df1n.columns, par, actionable=None)
 
 
-                for i in range(len(plan)):
-                    if plan[i] == [0, 0] or plan[i] == [0, 0.0]:
-                        plan[i] = [-0.05, 0.05]
+                    for k in range(len(plan)):
+                        if plan[k] == [0, 0] or plan[k] == [0, 0.0]:
+                            plan[k] = [-0.05, 0.05]
 
-                # print("==============================================================")
-                # print("plan:", plan)
+                    # Write data
+                    writer.writerow([f'Month_{i+1}'] + rec)
 
+                    print("rec:", rec)
+                    print("==============================================================")
+                    score.append(overlap(plan, actual))
+                    size.append(size_interval(plan))
+                    score2.append(overlap(plan, actual))
+                    records.append(rec)
+                    tp, tn, fp, fn = abcd(temp, plan, actual, rec)
+                    print("")
+                    matrix.append([tp, tn, fp, fn])
 
-                # if act:
-                #     if rec in seen_id:
-                #         supported_plan_id = seen[seen_id.index(rec)]
-                #     else:
-                #         supported_plan_id = find_supported_plan(rec, rules, top=5)
-                #         seen_id.append(rec.copy())
-                #         seen.append(supported_plan_id)
-
-                #     for k in range(len(rec)):
-                #         if rec[k] != 0:
-                #             if (k not in supported_plan_id) and ((0 - k) not in supported_plan_id):
-                #                 plan[k][0], plan[k][1] = tem[k] - 0.05, tem[k] + 0.05
-                #                 rec[k] = 0
-
-                # print("==============================================================")
-                # print("plan:", plan)
-                # print("==============================================================")
-                print("rec:", rec)
-                print("==============================================================")
-                # print("actual:", actual)
-
-                # Function to save data to CSV file
-
-                # with open(file_path_1, mode='a', newline='') as file:
-                #     writer = csv.writer(file)
-                #     # writer.writerow(['plans'] + plan)
-                #     writer.writerow(['rec'] + rec)
-
-                # with open('plans.txt', 'a') as f:
-                #     # f.write(plan)
-                #     # for row in plan:
-                #     #     f.write(','.join(map(str, row)) + '||')
-                #     # f.write('\n')
-                #     f.writelines('\n'.join(str(item) for item in plan))
-                #     f.write('\n')
-                #     f.write("==============================================================")
-                #     f.write('\n')
-                #     f.writelines('\n'.join(str(item) for item in rec))
-                #     f.write('\n')
-                #     f.write("==============================================================")
-                #     f.write('\n')
-
-                score.append(overlap(plan, actual))
-                size.append(size_interval(plan))
-                score2.append(overlap(plan, actual))
-                records.append(rec)
-                tp, tn, fp, fn = abcd(temp, plan, actual, rec)
-                print("")
-                matrix.append([tp, tn, fp, fn])
-
-                bugchange.append(bug3[j] - bug2[i])  # negative if reduced #bugs, positive if added
-            break
+                    bugchange.append(bug3[j] - bug2[i])  # negative if reduced #bugs, positive if added
+                break
     return score, bugchange, size, score2, records, matrix
 
 
@@ -188,8 +156,8 @@ def historical_logs(name, par, target, explainer=None, smote=False, small=0.05, 
     freq = [0] * 6
     deltas = []
     for j in range(0, len(files) - 2):
-        df1 = prepareData(files[j],target)
-        df2 = prepareData(files[j + 1],target)
+        df1,cols = prepareData(files[j],target)
+        df2, cols = prepareData(files[j + 1],target)
         for i in range(1, 7):
             col1 = df1.iloc[:, i]
             col2 = df2.iloc[:, i]
@@ -203,9 +171,9 @@ def historical_logs(name, par, target, explainer=None, smote=False, small=0.05, 
         else:
             actionable.append(0)
 
-    df1 = prepareData(name[0],target)
-    df2 = prepareData(name[1],target)
-    df3 = prepareData(name[2],target)
+    df1, cols = prepareData(name[0],target)
+    df2, cols = prepareData(name[1],target)
+    df3, cols = prepareData(name[2],target)
     bug1 = bugs(name[0],target)
     bug2 = bugs(name[1],target)
     bug3 = bugs(name[2],target)
