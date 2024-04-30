@@ -7,28 +7,24 @@ from ..config import Config
 
 DEFAULT_CONFIG = Config()
 
-def collect_bellwether(config=DEFAULT_CONFIG):
-    month = config.month
-    no_goals= config.no_goals
-    seed = config.seed
-
+def collect_bellwether(seeds: list, month: int, goals: list):
     output_folder = "bellwethers/"
 
-    for i in range(no_goals):
-        goal = utils.get_goal(i, config)
+    for goal in goals:
 
         res_df_0 = pd.DataFrame()
         res_df_1 = pd.DataFrame()
 
-        result_source = 'results/with_CFS_DE/'+str(seed)+'/month_' + str(month) + '_models/' + goal + '/'
-        bellwether_0 = pd.read_csv(os.path.join(result_source, "bellwether_level_0.csv"))
-        bellwether_1 = pd.read_csv(os.path.join(result_source, "bellwether_level_1.csv"))
+        for seed in seeds:
+            result_source = 'results/with_CFS_DE/'+str(seed)+'/month_' + str(month) + '_models/' + goal + '/'
+            bellwether_0 = pd.read_csv(os.path.join(result_source, "bellwether_level_0.csv"))
+            bellwether_1 = pd.read_csv(os.path.join(result_source, "bellwether_level_1.csv"))
 
-        bellwether_0["seed"] = seed
-        bellwether_1["seed"] = seed
+            bellwether_0["seed"] = seed
+            bellwether_1["seed"] = seed
 
-        res_df_0 = res_df_0.append(bellwether_0, ignore_index=True)
-        res_df_1 = res_df_1.append(bellwether_1, ignore_index=True)
+            res_df_0 = res_df_0.append(bellwether_0, ignore_index=True)
+            res_df_1 = res_df_1.append(bellwether_1, ignore_index=True)
         
         if not os.path.exists("meta_data/old_new_names_mapping.csv"):
             print("Old names - New names mapping missing. Exiting ...")

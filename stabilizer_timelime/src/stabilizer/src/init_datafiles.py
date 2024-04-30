@@ -7,32 +7,28 @@ import sys
 
 import pandas as pd
 
-from ..config import Config
-
-DEFAULT_CONFIG = Config()
-
-def create_folders(config=DEFAULT_CONFIG):
+def create_folders(seeds: list, month: int, goals: list):
     folders_to_create = ["data/data_use/","results/attribute/", "results/with_CFS_DE/", "meta_data/", "bellwethers/"]
 
     for folder in folders_to_create:
         shutil.rmtree(folder, ignore_errors=True)
         Path(folder).mkdir(parents=True, exist_ok=True)
     
-    shutil.rmtree("data/data_use_{0}_months/".format(config.month), ignore_errors=True)
-    Path("data/data_use_{0}_months/".format(config.month)).mkdir(parents=True, exist_ok=True)
+    shutil.rmtree("data/data_use_{0}_months/".format(month), ignore_errors=True)
+    Path("data/data_use_{0}_months/".format(month)).mkdir(parents=True, exist_ok=True)
 
-    attr_seed = os.path.join("results/attribute/", str(config.seed))
-    Path(attr_seed).mkdir(parents=True, exist_ok=True)
+    for seed in seeds:
+        attr_seed = os.path.join("results/attribute/", str(seed))
+        Path(attr_seed).mkdir(parents=True, exist_ok=True)
 
-    cfs_seed = os.path.join("results/with_CFS_DE/", str(config.seed))
-    Path(cfs_seed).mkdir(parents=True, exist_ok=True)
+        cfs_seed = os.path.join("results/with_CFS_DE/", str(seed))
+        Path(cfs_seed).mkdir(parents=True, exist_ok=True)
 
-    subfolders = ['Stats_new', 'month_{0}_models'.format(config.month)]
+    subfolders = ['Stats_new', 'month_{0}_models'.format(month)]
 
     for subfolder in subfolders:
         subfolder_path = os.path.join(cfs_seed, subfolder)
         if subfolder!='Stats_new':
-            goals=config.goals
             for goal in goals:
                 updated_goal_path=os.path.join(subfolder_path, goal)
                 os.makedirs(updated_goal_path, exist_ok=True)
@@ -42,8 +38,8 @@ def create_folders(config=DEFAULT_CONFIG):
     Path("results/with_CFS_DE/Stats_new").mkdir(parents=True, exist_ok=True)
 
 
-def copy_source_2_data_use(config=DEFAULT_CONFIG):
-    source_dir = config.data_path
+def copy_source_2_data_use(data_path: str):
+    source_dir = data_path
     dest_dir = "data/data_use/"
 
     for file_name in os.listdir(source_dir):
@@ -76,9 +72,9 @@ def rename_data_files():
     pd.DataFrame.from_dict(record).to_csv("meta_data/old_new_names_mapping.csv", index=False)
 
 
-def move_x_months_data(config=DEFAULT_CONFIG):
+def move_x_months_data(month: int):
     source_folder = "data/data_use"
-    destination_folder = "data/data_use_{0}_months/".format(config.month)
+    destination_folder = "data/data_use_{0}_months/".format(month)
 
     for filename in os.listdir(source_folder):
         if filename.endswith(".csv"):
@@ -87,11 +83,11 @@ def move_x_months_data(config=DEFAULT_CONFIG):
 
             num_rows = df.shape[0]
 
-            if num_rows>config.month:
+            if num_rows>month:
                 shutil.copy(filepath, os.path.join(destination_folder, filename))
 
-def move_back_2_data_use(config=DEFAULT_CONFIG):
-    source_dir = "data/data_use_{0}_months/".format(config.month)
+def move_back_2_data_use(month: int, goals: list):
+    source_dir = "data/data_use_{0}_months/".format(month)
     dest_dir = "data/data_use/"
 
     for file_name in os.listdir(dest_dir):
@@ -99,7 +95,7 @@ def move_back_2_data_use(config=DEFAULT_CONFIG):
 
         os.remove(file_path)
 
-    cols = ["dates"] + config.goals
+    cols = ["dates"] + goals
 
     # Loop through all files in the source directory
     for file_name in os.listdir(source_dir):
@@ -117,18 +113,18 @@ def move_back_2_data_use(config=DEFAULT_CONFIG):
             shutil.copy(file_path, os.path.join(dest_dir, file_name))
 
 
-def init_datafiles(config=DEFAULT_CONFIG):
+def init_datafiles(data_path:str, seeds: list, month: int, goals: list):
     # Create necessary folders
-    create_folders(config)
+    create_folders(seeds, month, goals)
 
     # Copy data files to data_use/
-    copy_source_2_data_use(config)
+    copy_source_2_data_use(data_path)
 
     # Rename data files
     rename_data_files()
 
     # Only take data for x months
-    move_x_months_data(config)
+    move_x_months_data(month)
 
     # Move data back to data_use/ with some cleaning
-    move_back_2_data_use(config)
+    move_back_2_data_use(month, goals)

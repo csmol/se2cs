@@ -4,7 +4,11 @@ Code repository for library stabilizer-timelime - https://pypi.org/project/stabi
 
 ### Description
 
-Pending
+This project is a package version of [STABILIZER](https://arxiv.org/abs/1911.04250) and [TimeLIME]().
+
+Stabilizer generates the hierarchical clustering of the projects and develops a predictive model for the goal for every project. It then promotes the best model at each level to the level above. At level 0, we get the model/project which generalizes of all of the projects.
+
+TimeLime on the other hand, suggests plan to improve the goal (increase/decrease). It only suggests the plans that it has seen in the past.
 
 ### How to build the package?
 
